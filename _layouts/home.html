@@ -1,14 +1,24 @@
 ---
-layout: default
+layout: page
 ---
+{%- if site.posts.size > 0 -%}
+<ul class="posts">
+	{%- for post in site.posts -%}
+	<li>
+		{%- assign date_format = site.minima.date_format | default: "%b %-d, %Y" -%}
+		<div class="post-meta">
+			<a class="post-link" href="{{ post.url | relative_url }}">
+				<h2 class="post-title">{{ post.title | escape }}</h2>
+			</a>
+			<div class="post-date"><i class="icon-calendar"></i>{{ post.date | date: date_format }}</div>
+		</div>
+		<div class="post">
+			{%- if site.show_excerpts -%}
+			{{ post.excerpt }}
+			{%- endif -%}
+		</div>
+	</li>
+	{%- endfor -%}
+</ul>
+{%- endif -%}
 
-<div class="home">
-
-  <div id="main" class="call-out"
-       style="background-image: url('{{ site.header_feature_image | relative_url }}')">
-    <h1> {{ site.header_text | default: "Change <code>header_text</code> in <code>_config.yml</code>"}} </h1>
-  </div>
-
-  {% include blog.html %}
-    
-</div>
