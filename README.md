@@ -1,37 +1,137 @@
-## Welcome to GitHub Pages
+# texture
 
-You can use the [editor on GitHub](https://github.com/hantaoye/taoye.github.io/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+A configurable jekyll theme for simply beautiful blogs.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+**Demo**: [thelehhman.com/texture](https://thelehhman.com/texture)
 
-### Markdown
+![texture theme preview](/screen1.png)
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
-```markdown
-Syntax highlighted code block
+## Installation on Github Pages
 
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+Add this line to your site's `_config.yml`:
+```yaml
+remote_theme: thelehhman/texture
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+**NOTE: If you are forking this repo, remove `base_url: /texture` in the `_config.yml` which is required to load the required website assets**
+## Installation
 
-### Jekyll Themes
+Add this line to your Jekyll site's `Gemfile`:
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/hantaoye/taoye.github.io/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+```ruby
+gem "texture"
+```
 
-### Support or Contact
+And add this line to your Jekyll site's `_config.yml`:
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+```yaml
+theme: texture
+```
+
+And then execute:
+
+    $ bundle
+
+Or install it yourself as:
+
+    $ gem install texture
+
+## Usage
+
+The "texture" key in _config.yml is used to customize the theme data.
+```yaml
+texture:
+  title: Adam Denisov
+  tagline: Developer. Designer
+  date_format: "%b %-d, %Y"
+
+  social_links:
+    twitter: thelehhman
+    github:  thelehhman
+    linkedIn: in/thelehhman # format: locale/username
+```
+
+**Styling**
+
+Multiple header styles are supported using the "style" property under texture in `_config.yml`.
+
+```yaml
+texture:
+  style: [yellow|red|black|blue|green|purple]
+```
+
+For example, the blue style looks like this:
+
+![texture theme blue](/screen2.png)
+
+
+**Texture Picker**
+
+You can toggle the texture picker to show/experiment various textures on your site using the showPicker variable. Remember to make it `false` for production.
+
+```yaml
+texture:
+  showPicker: [false|true] # show the texture selector(development purposes)
+```
+
+**Comments (Disqus)**
+
+Comments on posts can be enabled by specifying your disqus_shortname under texture in `_config.yml`. For example,
+```yaml
+texture:
+  disqus_shortname: games
+```
+
+**Google Analytics**
+
+It can be enabled by specifying your analytics id under texture in `_config.yml`
+```yaml
+texture:
+  analytics_id: '< YOUR ID >'
+```
+
+**Excerpts**
+
+Excerpts can be enabled by adding the following line to your `_config.yml`
+```yaml
+show_excerpts: true
+```
+
+**Toggle Navbar**
+
+```yaml
+texture:
+  showNav: true
+```
+
+**Layouts**
+
+- Home
+- Page
+- Post
+
+## Contributing
+
+Bug reports and pull requests are welcome on GitHub at https://github.com/thelehhman/texture. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+
+## Development
+
+To set up your environment to develop this theme, run `bundle install`.
+
+Your theme is setup just like a normal Jekyll site! To test your theme, run `bundle exec jekyll serve` and open your browser at `http://localhost:4000`. This starts a Jekyll server using your theme. Add pages, documents, data, etc. like normal to test your theme's contents. As you make modifications to your theme and to your content, your site will regenerate and you should see the changes in the browser after a refresh, just like normal.
+
+When your theme is released, only the files in `_layouts`, `_includes`, `_sass` and `assets` tracked with Git will be bundled.
+To add a custom directory to your theme-gem, please edit the regexp in `texture.gemspec` accordingly.
+
+## Donation
+If this project help you reduce time to develop, you can give me a cup of coffee :) 
+
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/thelehhman)
+
+## License
+
+The theme is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+
+## More Themes
+[plainwhite](https://github.com/thelehhman/plainwhite-jekyll)
