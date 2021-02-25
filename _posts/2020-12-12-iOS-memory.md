@@ -1,7 +1,8 @@
 ---
 layout: post
 title:  "iOS内存相关"
-date:   2020-12-10 21:03:36 +0530
+date:   2020-12-12 21:03:36 +0530
+description: 2020年复现总结
 ---
 
 
@@ -86,7 +87,7 @@ clean memory加载后不会发生变化， class_ro_t属于clean memory，（新
 全局区又可分为：未初始化全局区： bss段   初始化全局区：data段
 如下图中的 数据段+bss段 = 上面的数据段+全局静态区，  或者还有叫（常量区+全局区(静态区)）的一个意思
 
-![40b5bc75fbee357aa7a0721d118a6b6f](assets/img/A10FF6B1-3485-4077-A53C-E17D5C09E01A.png)
+![40b5bc75fbee357aa7a0721d118a6b6f](/assets/img/A10FF6B1-3485-4077-A53C-E17D5C09E01A.png)
 
 > mach-o的__Data下(__data和__bss)会放入数据区和 全局静态区
 
@@ -123,7 +124,7 @@ Jetsam 维护了一个优先级队列 内核会调起一个内核优先级最高
 * 当对象调用 autorelease 方法时，会将对象加入 AutoreleasePoolPage 的栈中
 * 调用 AutoreleasePoolPage::pop 方法会向栈中的对象发送 release 消息
 
-![1c3973e00cf823097e05d97180284d58](assets/img/F40129EA-AF69-453D-B37E-8CF941E4D550.jpg)
+![1c3973e00cf823097e05d97180284d58](/assets/img/F40129EA-AF69-453D-B37E-8CF941E4D550.jpg)
 * 这个结构体会在初始化时调用 objc_autoreleasePoolPush() 方法，会在析构时调用 objc_autoreleasePoolPop 方法 
 push 和 pop 是对 autoreleasePoolPage进行调用
 ```
