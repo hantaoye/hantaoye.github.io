@@ -12,15 +12,13 @@ description: 2020年复现总结
 1、数据成员对其规则：结构体(struct)或联合体(union)的数据成员，第一个数据成员放在offset为0的地方，以后每个数据成员存储的起始位置要从该成员大小或者成员的子成员大小（只要该成员有子成员，比如数组、结构体等）的整数倍开始。
 eg: int为4字节，则要从4的整数倍地址开始存储
 
-
 2、结构体作为成员：如果一个结构体内部包含其他结构体成员，则结构体成员要从其内部最大元素大小的整数倍地址开始存储。
 eg: struct a里包含struct b，b中包含其他char、int、double等元素，那么b应该从8（double的元素大小）的整数倍开始存储
 
-
 3、收尾工作：结构体的总大小，也就是sizeof的结果，必须是其内部最大成员的整数倍，不足的需要补齐。
 
-
 **为啥要对齐**
+
 经过内存对齐之后可以发现，size反而变大了。那为什么还要进行内存对齐呢？因为cpu存取内存并不是以byte为单位的，而是以块为单位，每块可以为2/4/8/16字节，每次内存存取都会产生一个固定的开销，减少内存存取次数将提升程序的性能。所以 CPU 一般会以 2/4/8/16/32 字节为单位来进行存取操作。我们将上述这些存取单位也就是块大小称为（memory access granularity）内存存取粒度。如果没有内存对齐，会大大增加cpu在存取过程中的消耗
 为了在访问对象的时候提高访问效率（空间换时间），同时也可以有效避免访问溢出。
 
@@ -41,19 +39,17 @@ p.age = 18;         //  int       4
 p.height = 188;     //  long      8
 p.hobby = @"game";  //  NSString  8
 
+/// 打印结果： 申请内存大小为：40---系统开辟内存大小为：48
 NSLog(@"申请内存大小为：%lu——-系统开辟内存大小为：%lu",class_getInstanceSize([p class]),malloc_size((__bridge const void *)(p)));
 
-打印结果： 申请内存大小为：40---系统开辟内存大小为：48
 ```
 
 
-
-
-### 销毁
+### 对象销毁
 对象的销毁虽然消耗资源不多，但累积起来也是不容忽视的。通常当容器类持有大量对象时，其销毁时的资源消耗就非常明显。同样的，如果对象可以放到后台线程去释放，那就挪到后台线程去。这里有个小 Tip：把对象捕获到 block 中，然后扔到后台队列去随便发送个消息以避免编译器警告，就可以让对象在后台线程销毁了。
 
 
-### 概念
+### RAM概念
 RAM 随机存取存储器（random access memory，RAM）又称作“随机存储器”，是与CPU直接交换数据的内部存储器，也叫主存(内存)。
 
 ### CPU 寻址方式 内存分页 内存压缩
@@ -71,7 +67,7 @@ RAM 随机存取存储器（random access memory，RAM）又称作“随机存�
 
 ###  dirty memory 与clean meory 如何区分
 clean memory加载后不会发生变化， class_ro_t属于clean memory，（新创建的固定长度的数组，预先占用的内存也是clean memory） 只读的，收到内存警告后可以由系统进行销毁，再次创建。 &nbsp;Dirty memory是运行时进行修改的内存块。类一旦被加载，就是dirty memory。runtime给类动态添加方法，都是操作的dirty memory. class_rw_t属于 dirty memory， 对开发者来说，越多的clean memory，越好&nbsp; &nbsp; &nbsp;Dirty memory 比clean 更昂贵，它需要更多的内存信息，并且只要进程正在运行，就必须保留它。&nbsp; &nbsp;class_rw_t是在 &nbsp;runtime期间创建的，它将class_ro_t内容copy一份，再将类的分类，动态加载的属性、方法、协议添加进去。苹果在iOS14 将动态部分提取出来，称为 class_rw_ext_t，可以吧90%的类优化为clean memory 在系统层面上节约了14MB的内存。
-![bddf0e0ae38b583eb6e85f46a8aa88e5](hantaoye.github.io/blog/assets/img/096d3287-aef6-47d6-8b57-2863b4640d0c.jpg)
+![bddf0e0ae38b583eb6e85f46a8aa88e5](/assets/img/096d3287-aef6-47d6-8b57-2863b4640d0c.jpg)
 
 脏内存(Dirty Memory)：，主要包括：
 * 所有堆上的对象
@@ -127,6 +123,7 @@ Jetsam 维护了一个优先级队列 内核会调起一个内核优先级最高
 ![1c3973e00cf823097e05d97180284d58](/assets/img/F40129EA-AF69-453D-B37E-8CF941E4D550.jpg)
 * 这个结构体会在初始化时调用 objc_autoreleasePoolPush() 方法，会在析构时调用 objc_autoreleasePoolPop 方法 
 push 和 pop 是对 autoreleasePoolPage进行调用
+
 ```
 void *objc_autoreleasePoolPush(void) {
     return AutoreleasePoolPage::push();
@@ -147,7 +144,8 @@ class AutoreleasePoolPage {
     uint32_t hiwat; // 代表 high water mark 
 };
 
-调用栈
+/// 调用栈
+
 - [NSObject autorelease]
 └── id objc_object::rootAutorelease()
     └── id objc_object::rootAutorelease2()
@@ -160,10 +158,11 @@ class AutoreleasePoolPage {
                 └── static id *autoreleaseNoPage(id obj)
                     ├── AutoreleasePoolPage(AutoreleasePoolPage *newParent)
                     └── id *add(id obj)
+```
 
+ 看到这里返回的ret其实next指针指向的地址，由上面的push方法的源码可知，这里page->add(obj)传入的obj其实就是POOL_BOUNDARY，也就是说每一次调用push方法，都会插入一个POOL_BOUNDARY,所以objc_autoreleasePoolPush的返回值就是这个哨兵对象的地址。
 
- /// 看到这里返回的ret其实next指针指向的地址，由上面的push方法的源码可知，这里page->add(obj)传入的obj其实就是POOL_BOUNDARY，也就是说每一次调用push方法，都会插入一个POOL_BOUNDARY,所以objc_autoreleasePoolPush的返回值就是这个哨兵对象的地址。
-
+```
 static inline void *push() {
    return autoreleaseFast(POOL_SENTINEL);
 }
@@ -208,7 +207,7 @@ static inline id autorelease(id obj)
 POOL_SENTINEL（哨兵对象）
 #define POOL_SENTINEL nil
 
-![09bb81664ebfb4d419c0e9705c385caa](assets/img/0E293E50-9084-44F7-B522-080B25A457F8.png)
+![09bb81664ebfb4d419c0e9705c385caa](/assets/img/0E293E50-9084-44F7-B522-080B25A457F8.png)
 
 
 pop->releaseUntil
@@ -307,7 +306,7 @@ void releaseUntil(id *stop)
 > 注：alloc/new/copy/mutableCopy不会加入
 
 ### autoreleasepush (对上面方法总结)
-![16bfd17603f8c05a39e03f60780edf12](assets/img/4CD209B9-8538-4FAB-8432-F7181A1F84E1.png)
+![16bfd17603f8c05a39e03f60780edf12](/assets/img/4CD209B9-8538-4FAB-8432-F7181A1F84E1.png)
 
 
 首先会类型类别,如果是需要每个pool都生成一个新page,即DebugPoolAllocation为真时, 则执行autoreleaseNewPage方法,否则,执行autoreleaseFast方法.
@@ -323,7 +322,7 @@ void releaseUntil(id *stop)
 1. 使用nsthread创建的线程，默认不会添加autoreleasepool，但里面如果使用了__autoreleasing 或子线程在使用autorelease对象时，如果没有autoreleasepool会在autoreleaseNoPage中懒加载一个出来。
 2.在runloop的run:beforeDate，以及一些source的callback中，有autoreleasepool的push和pop操作，总结就是系统在很多地方都差不多autorelease的管理操作。
 3.就算插入没有pop也没关系，在线程exit的时候会释放资源，执行AutoreleasePoolPage::tls_dealloc，在这里面会清空autoreleasepool。
-![0f82c06fb83074c6219ceb5a37cb00b1](assets/img/0F82C06FB83074C6219CEB5A37CB00B1.jpg)
+![0f82c06fb83074c6219ceb5a37cb00b1](/assets/img/0F82C06FB83074C6219CEB5A37CB00B1.jpg)
 
 ### __strong __weak (runtime相关也有一份更详细的)
 strong 在llvm编译器转换成下面的代码
@@ -370,7 +369,7 @@ alloc, copy, ,mutableCopy和new这些方法会被默认标记为 __attribute((ns
 ### dirty memory 与clean meory如何区分
 
 clean memory加载后不会发生变化， class_ro_t属于clean memory，（新创建的固定长度的数组，预先占用的内存也是clean memory） 只读的，收到内存警告后可以由系统进行销毁，再次创建。 &nbsp;Dirty memory是运行时进行修改的内存块。类一旦被加载，就是dirty memory。runtime给类动态添加方法，都是操作的dirty memory. class_rw_t属于 dirty memory， 对开发者来说，越多的clean memory，越好&nbsp; &nbsp; &nbsp;Dirty memory 比clean 更昂贵，它需要更多的内存信息，并且只要进程正在运行，就必须保留它。&nbsp; &nbsp;class_rw_t是在 &nbsp;runtime期间创建的，它将class_ro_t内容copy一份，再将类的分类，动态加载的属性、方法、协议添加进去。苹果在iOS14 将动态部分提取出来，称为 class_rw_ext_t，可以吧90%的类优化为clean memory 在系统层面上节约了14MB的内存。
-![bddf0e0ae38b583eb6e85f46a8aa88e5](assets/img/096d3287-aef6-47d6-8b57-2863b4640d0c.jpg)
+![bddf0e0ae38b583eb6e85f46a8aa88e5](/assets/img/096d3287-aef6-47d6-8b57-2863b4640d0c.jpg)
 
 
 
@@ -379,7 +378,7 @@ clean memory加载后不会发生变化， class_ro_t属于clean memory，（新
 
 malloc内存分配基于malloc zone，并将基于大小分为nano、tiny、small、large四种类型,申请时按需分配.具体信息如下图:
          
-![75d74cc72054d34330b0a82abe057eef](assets/img/12F1BFD3-5682-4AA8-82DB-5581E54BDF3C.png)
+![75d74cc72054d34330b0a82abe057eef](/assets/img/12F1BFD3-5682-4AA8-82DB-5581E54BDF3C.png)
 
     
     malloc在初次调用时,会分配一个default zone和一个scalable zone作为辅助,在64位环境下,default zone为nano zone,负责分配nano大小,scalable zone负责tiny、small和large内存的分配.
@@ -387,7 +386,7 @@ malloc内存分配基于malloc zone，并将基于大小分为nano、tiny、smal
 ### malloc vs calloc
 
 malloc的内存分配当然也是先分配虚拟内存，然后使用的时候再映射到物理内存，不过malloc有一个缺陷，必须配合memset将内存区中所有的值设置为0。这样就导致了一个问题，malloc出一块内存区域时，系统并没有分配物理内存。然而，调用memset后，系统将会把malloc出的所有虚拟内存关联到物理内存上，因为你访问了所有内存区域。
-![6b111be066b4a0deb347334277c85ba0](assets/img/55EC05EB-B79D-4BA3-BAE7-61EC4498381C.png)
+![6b111be066b4a0deb347334277c85ba0](/assets/img/E86F5ACE-EDBD-443B-B839-E8984AF99679.png)
 
 官方推荐使用calloc代替malloc，calloc返回的内存区域会自动清零，而且只有使用时才会关联到物理内存并清零。
 [文章链接](https://www.jianshu.com/p/553f34b03624)
@@ -413,7 +412,7 @@ void allocCustomObjectsWithCustomMallocZone() {
 
 ### TLS,Thread Local Storage
 线程局部存储,也就是将一块内存作为某个线程专属的存储,同一线程的多个pool共享这个存储区域.那么这个区域具体存储什么呢?上文__strong的实现中我们提到,对于自己不持有的对象,系统会自动插入的一个命令objc_retainAutoreleasedReturnValue,与之对应的还有objc_retainAutoreleasedReturnValue objc_autoreleaseReturnValue.更详细的优化命令如下图:
-![ce90c9f20d89cb489130d964449fe320](assets/img/E9551B84-BFDB-4EDA-83A0-A0A6A18E4C51.png)
+![ce90c9f20d89cb489130d964449fe320](/assets/img/E9551B84-BFDB-4EDA-83A0-A0A6A18E4C51.png)
 
 autorelase的优化
 ```
@@ -444,7 +443,7 @@ First Subclass 和 Next Sibling Class 指针让运行时可以遍历当前使用
 Methods 、 Properties 、 Protocols ，这部分也是可以在运行时进行修改的。在实践中发现，其实只有大约10%类的方法会发生变化，所以这部分内存可以得到优化，滕出一些空间。
 Demangled Name 只会被Swift类所使用，而且除非有需要获取它们的Objective-C名称，甚至都不会用到。
 
-![15685124e41f56703cd0146262eae597](assets/img/1C5DA19B-9536-4224-9098-034849A0D01E.png)
+![15685124e41f56703cd0146262eae597](/assets/img/1C5DA19B-9536-4224-9098-034849A0D01E.png)
 这样就把class_rw_t，拆成了2部分。如果确实有需要，我们才会这部分class_rw_ext_t结构分配内存。大约90%的类都不需要这部分额外的数据，系统就可以节约大概14MB的内存
 
 tips:head xxxxx | egrep 'class_rw|COUNT’ 你可以使用此命令来查看 class_rw_t 消耗的内存。xxxx可以替换为需要测量的 App 名称。如：head Mail | egrep 'class_rw|COUNT’\'查看 Mail 应用的使用情况。
@@ -453,7 +452,7 @@ tips:head xxxxx | egrep 'class_rw|COUNT’ 你可以使用此命令来查看 cla
 方法列表是存在于镜像中的，而镜像的加载位置可能在内存的任何地方，这取决于动态链接器的选择。也就是说，链接器需要解析镜像中的指针，修复它们指向内存真实的的位置。这部分会产生额外的消耗。
 又由于镜像中的方法都是固定的，不会跑到其他镜像中去。其实我们不需要64位寻址的指针，只需要32位即可。
 
-![b32e8abbcb7a1305a3c252086e9cf444](assets/img/7B774A7B-5718-49CA-86BE-8D718FA301D0.png)
+![b32e8abbcb7a1305a3c252086e9cf444](/assets/img/7B774A7B-5718-49CA-86BE-8D718FA301D0.png)
 这样做有几个好处：
 
 这个偏移量相对镜像是固定的，与镜像加载的位置无关，当它们从磁盘加载进来后就不要进行修复了。
@@ -464,11 +463,11 @@ tips:head xxxxx | egrep 'class_rw|COUNT’ 你可以使用此命令来查看 cla
 
 Tagged Pointer 格式的变化
 内存对齐要求的存在，低位始终为0，对象必须始终位于指针大小倍数的地址中。高位也始终为0。实际上我们只是用中间这一部分的位。
-![08598170d231556da9fe80fa8f380256](assets/img/7C854239-9077-4EF1-87A0-F96AEABE2CE5.png)
+![08598170d231556da9fe80fa8f380256](/assets/img/7C854239-9077-4EF1-87A0-F96AEABE2CE5.png)
 Intel
-![75852520a363c85d3d8e88597835eff8](assets/img/D6099198-7B12-4264-9361-EAFE1021A3C8.png)
+![75852520a363c85d3d8e88597835eff8](/assets/img/D6099198-7B12-4264-9361-EAFE1021A3C8.png)
 ARM64
-![0acdcef054f257bdc127bc4857769e95](assets/img/7BFD5C7C-691F-4159-A606-C22158EB2BCD.png)
+![0acdcef054f257bdc127bc4857769e95](/assets/img/7BFD5C7C-691F-4159-A606-C22158EB2BCD.png)
 
 
 
