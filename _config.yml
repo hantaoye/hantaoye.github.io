@@ -15,8 +15,8 @@ sass:
 
 permalink: /posts/:title/
 texture:
-  title: Adam Denisov
-  tagline: Developer. Designer
+  title: hantaoye的个人博客
+  tagline: 一个在温饱线上挣扎的iOS开发
   date_format: "%b %-d, %Y"
   style: black
   showNav: false
@@ -24,9 +24,9 @@ texture:
 
   # generate social links in footer
   social_links:
-    twitter: thelehhman
-    github:  thelehhman
-    linkedIn: in/thelehhman
+#    twitter: thelehhman
+    github:  hantaoye
+ #   linkedIn: in/thelehhman
     rss: rss
  
 
