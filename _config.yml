@@ -16,7 +16,7 @@ sass:
 permalink: /posts/:title/
 texture:
   title: hantaoye的个人博客
-  tagline: 白了少年发，只剩岁月在沧桑！
+  tagline: 白了少年发，只剩岁月在iOS中沧桑！
   date_format: "%b %-d, %Y"
   style: black
   showNav: false
